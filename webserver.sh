@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# instalacao do Apache
+# Apache Setup
 
 yum -y update && yum -y install httpd
 
-# altera a pagina inicial
+# Default homepage
 
 cat <<EOF > /var/www/html/index.html
 <html>
@@ -14,7 +14,7 @@ cat <<EOF > /var/www/html/index.html
 </html>
 EOF
 
-# inicio automatico do Apache
+# httpd service
 systemctl enable httpd
 systemctl start httpd
 
