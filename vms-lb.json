@@ -7,7 +7,7 @@
       "defaultvalue": "admin",
       "metadata": {
         "description": "Admin username"
-      }
+     }
     },
     "adminPassword": {
       "type": "securestring",
