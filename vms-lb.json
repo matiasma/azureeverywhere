@@ -1,9 +1,10 @@
-﻿{
+{
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "adminUsername": {
       "type": "string",
+      "defaultvalue": "admin"
       "metadata": {
         "description": "Admin username"
       }
@@ -11,13 +12,13 @@
     "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "Admin password"
+        "description": "Admin password (min 12 characters)"
       }
     },
     "dnsNameforLBIP": {
       "type": "string",
       "metadata": {
-        "description": "DNS for Load Balancer IP"
+        "description": "DNS prefix for Load Balancer IP (unique)"
       }
     },
     "vmNamePrefix": {
@@ -37,31 +38,10 @@
       "defaultValue": "7.2",
       "metadata": {
         "description": "CentOS Version"
-      }
-    },
-    "lbName": {
-      "type": "string",
 
-      "defaultValue": "myLB",
-      "metadata": {
-        "description": "Load Balancer name"
       }
     },
-    "nicNamePrefix": {
-      "type": "string",
-      "defaultValue": "nic",
-      "metadata": {
-        "description": "Network Interface name prefix"
-      }
-    },
-    "publicIPAddressName": {
-      "type": "string",
-      "defaultValue": "myPublicIP",
-      "metadata": {
-        "description": "Public IP Name"
-      }
-    },
-    "vnetName": {
+     "vnetName": {
       "type": "string",
       "defaultValue": "myVNET",
       "metadata": {
@@ -87,15 +67,18 @@
     "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]", 
     "storageAccountType": "Premium_LRS",
     "availabilitySetName": "myAvSet",
+    "lbName": "myLB",
+    "nicNamePrefix": "nic",
+    "publicIPAddressName": "myPublicIP",
     "addressPrefix": "10.0.0.0/16",
     "subnetName": "Subnet-1",
     "subnetPrefix": "10.0.0.0/24",
     "publicIPAddressType": "Dynamic",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vnetName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables ('subnetName'))]",
-    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicIPAddressName'))]",
+    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
     "numberOfInstances": 2,
-    "lbID": "[resourceId('Microsoft.Network/loadBalancers',parameters('lbName'))]",
+    "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('lbName'))]",
     "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/LoadBalancerFrontEnd')]",
     "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/BackendPool1')]",
     "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]"
@@ -130,7 +113,7 @@
     {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[parameters('publicIPAddressName')]",
+      "name": "[variables('publicIPAddressName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
@@ -163,7 +146,7 @@
     {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('nicNamePrefix'), copyindex())]",
+      "name": "[concat(variables('nicNamePrefix'), copyindex())]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "nicLoop",
@@ -171,7 +154,7 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
-        "[concat('Microsoft.Network/loadBalancers/', parameters('lbName'))]"
+        "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -199,11 +182,11 @@
     },
     {
       "apiVersion": "2015-05-01-preview",
-      "name": "[parameters('lbName')]",
+      "name": "[variables('lbName')]",
       "type": "Microsoft.Network/loadBalancers",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
       ],
       "properties": {
         "frontendIPConfigurations": [
@@ -293,7 +276,7 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicNamePrefix'), copyindex())]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicNamePrefix'), copyindex())]",
         "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
       ],
       "properties": {
@@ -327,7 +310,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('nicNamePrefix'),copyindex()))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicNamePrefix'),copyindex()))]"
             }
           ]
         },
