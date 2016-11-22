@@ -9,7 +9,7 @@ yum -y update && yum -y install httpd
 cat <<EOF > /var/www/html/index.html
 <html>
 <body>
-<h1>Servidor $(hostname)</h1>
+<h1>server: $(hostname)</h1>
 </body>
 </html>
 EOF
