@@ -4,7 +4,7 @@
   "parameters": {
     "adminUsername": {
       "type": "string",
-      "defaultvalue": "admin",
+      "defaultvalue": "vmadmin",
       "metadata": {
         "description": "Admin username"
      }
