@@ -1,13 +1,7 @@
 ﻿{
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
   "contentVersion": "1.0.0.0",
-  "parameters": {
-    "storageAccountName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of storage account"
-      }
-    },
+  "parameters": 
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -28,34 +22,26 @@
     },
     "vmNamePrefix": {
       "type": "string",
-      "defaultValue": "myVM",
+      "defaultValue": "WEB",
       "metadata": {
         "description": "Prefix to use for VM names"
       }
     },
-    "imagePublisher": {
-      "type": "string",
-      "defaultValue": "OpenLogic",
-      "metadata": {
-        "description": "Image Publisher"
-      }
-    },
-    "imageOffer": {
-      "type": "string",
-      "defaultValue": "CentOS",
-      "metadata": {
-        "description": "Image Offer"
-      }
-    },
     "imageSKU": {
       "type": "string",
+      "allowedValues": [
+        "7.2",
+        "7.1",
+        "7.0",
+      ],
       "defaultValue": "7.2",
       "metadata": {
-        "description": "Image SKU"
+        "description": "CentOS Version"
       }
     },
     "lbName": {
       "type": "string",
+
       "defaultValue": "myLB",
       "metadata": {
         "description": "Load Balancer name"
@@ -84,6 +70,11 @@
     },
     "vmSize": {
       "type": "string",
+      "allowedValues": [
+       "Standard_DS1_V2",
+       "Standard_DS2_V2",
+       "Standard_DS3_V2",
+      ],
       "defaultValue": "Standard_DS2_V2",
       "metadata": {
         "description": "Size of the VM"
@@ -91,6 +82,9 @@
     }
   },
   "variables": {
+    "imageOffer": "CentOS",
+    "imagePublisher": "OpenLogic",
+    "storageAccountName": "[concat('storage', uniqueString(resourceGroup().id))]", 
     "storageAccountType": "Premium_LRS",
     "availabilitySetName": "myAvSet",
     "addressPrefix": "10.0.0.0/16",
@@ -109,7 +103,7 @@
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('storageAccountName')]",
+      "name": "[variables('storageAccountName')]",
       "apiVersion": "2015-05-01-preview",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -118,7 +112,7 @@
     },
 {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[concat(parameters('storageAccountName'),'diag')]",
+      "name": "[concat(variables('storageAccountName'),'diag')]",
         "apiVersion": "2015-05-01-preview",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -298,7 +292,7 @@
       },
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
         "[concat('Microsoft.Network/networkInterfaces/', parameters('nicNamePrefix'), copyindex())]",
         "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]"
       ],
@@ -316,15 +310,15 @@
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "[parameters('imagePublisher')]",
-            "offer": "[parameters('imageOffer')]",
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
             "sku": "[parameters('imageSKU')]",
             "version": "latest"
           },
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/','osdisk', copyindex(), '.vhd')]"
+              "uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/vhds/','osdisk', copyindex(), '.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -340,7 +334,7 @@
         "diagnosticsProfile": {
           "bootDiagnostics": {
              "enabled": "true",
-             "storageUri": "[concat('http://',parameters('storageAccountName'),'diag.blob.core.windows.net')]"
+             "storageUri": "[concat('http://',variables('storageAccountName'),'diag.blob.core.windows.net')]"
           }
         }
       }
