@@ -1,0 +1,28 @@
+# cria um grupo de recursos
+az resource group create -l brazilsouth -n grupotemporario
+# cria a rede virtual
+az network vnet create -g grupotemporario -n vnet01 --address-prefix 192.168.0.0/24 --subnet-name sub01 --subnet-prefix 192.168.0.0/26
+# cria um load balancer
+az network lb create -g grupotemporario -n lb01 --backend-pool-name vms01 --frontend-ip-name lb01ipname --public-ip-address lbpubip01 --public-ip-address-allocation static --public-ip-dns-name lbip01matias
+# cria uma regra para validar a saúde das VMs no load balancer, em cima de HTTP
+az network lb probe create -g grupotemporario --lb-name lb01 -n probe01 --port 80 --protocol http --path /
+# cria a estrutura do pool de VMs, a serem adicionadas posteriormente
+az network lb rule create -g grupotemporario --lb-name lb01 --backend-pool-name vms01 --backend-port 80 --frontend-ip-name lb01ipname --frontend-port 80 -n rulehttp01 --probe-name probe01 --protocol tcp
+# cria uma entrada NAT para permitir acesso SSH à VM1, através da porta 50001 do IP público do load balancer
+az network lb inbound-nat-rule create -g grupotemporario --lb-name lb01 --name SSH0 --frontend-ip-name lb01ipname --protocol TCP --frontend-port 50001 --backend-port 22
+# cria uma entrada NAT para permitir acesso SSH à VM2, através da porta 50002 do IP público do load balancer
+az network lb inbound-nat-rule create -g grupotemporario --lb-name lb01 --name SSH1 --frontend-ip-name lb01ipname --protocol TCP --frontend-port 50002 --backend-port 22
+# cria a placa de rede da VM1, adicionando-a ao load balancer
+az network nic create -g grupotemporario -n vm01nic1 --vnet-name vnet01 --subnet sub01 --lb-name lb01 --lb-address-pools vms01 --lb-inbound-nat-rules SSH0
+# cria a placa de rede da VM2, adicionando-a ao load balancer
+az network nic create -g grupotemporario -n vm02nic1 --vnet-name vnet01 --subnet sub01 --lb-name lb01 --lb-address-pools vms01 --lb-inbound-nat-rules SSH1
+# cria o conjunto de disponibilidade para suportar alta disponibilidade das VMs
+az vm availability-set create -g grupotemporario -l brazilsouth -n as01
+# cria a VM1
+az vm create -n vm01 -g grupotemporario --image centos --availability-set as01 --size Standard_DS2_v2 --nics vm01nic1 --nsg ''
+# cria a VM2
+az vm create -n vm02 -g grupotemporario --image centos --availability-set as01 --size Standard_DS2_v2 --nics vm02nic1 --nsg ''
+# executa o script de preparação da VM1
+az vm extension set -g grupotemporario --vm-name VM01 -n CustomScriptForLinux --publisher Microsoft.OSTCExtensions --settings '{"fileUris":["https://raw.githubusercontent.com/matiasma/azureeverywhere/master/webserver.sh"], "commandToExecute": " sh webserver.sh " }'
+# executa o script de preparação da VM2
+az vm extension set -g grupotemporario --vm-name VM02 -n CustomScriptForLinux --publisher Microsoft.OSTCExtensions --settings '{"fileUris":["https://raw.githubusercontent.com/matiasma/azureeverywhere/master/webserver.sh"], "commandToExecute": " sh webserver.sh " }'
