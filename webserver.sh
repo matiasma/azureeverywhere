@@ -2,7 +2,7 @@
 
 # Apache Setup
 
-yum -y update && yum -y install httpd
+yum -y install httpd
 
 # Default homepage
 
@@ -17,4 +17,3 @@ EOF
 # httpd service
 systemctl enable httpd
 systemctl start httpd
-
