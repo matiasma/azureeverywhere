@@ -9,10 +9,10 @@
         "description": "Admin username"
      }
     },
-    "adminPassword": {
+    "adminPublicKey": {
       "type": "securestring",
       "metadata": {
-        "description": "Admin password (min 12 characters)"
+        "description": "Admin Public Key"
       }
     },
     "dnsNameforLBIP": {
@@ -289,7 +289,17 @@
         "osProfile": {
           "computerName": "[concat(parameters('vmNamePrefix'), copyIndex())]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "linuxConfiguration": {
+                        "disablePasswordAuthentication": true,
+                        "ssh": {
+                            "publicKeys": [
+                                {
+                                    "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                                    "keyData": "[parameters('adminPublicKey')]"
+                                }
+                            ]
+                        }
+                    }
         },
         "storageProfile": {
           "imageReference": {
