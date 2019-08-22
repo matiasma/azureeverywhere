@@ -271,7 +271,7 @@
       }
     },
     {
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2017-03-30",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(parameters('vmNamePrefix'), copyindex())]",
       "copy": {
@@ -313,10 +313,14 @@
             "sku": "[parameters('imageSKU')]",
             "version": "latest"
           },
-          "osDisk": {
-            "caching": "ReadWrite",
-            "createOption": "FromImage"
-          }
+           "osDisk": {
+              "name": "[concat(parameters('vmNamePrefix'), copyindex(),'_OSDisk')]",
+              "managedDisk": {
+                "storageAccountType": "Premium_LRS"
+               },
+               "caching": "ReadWrite",
+               "createOption": "FromImage"
+               }
         },
         "networkProfile": {
           "networkInterfaces": [
