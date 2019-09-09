@@ -1,0 +1,12 @@
+region01=brazilsouth
+region02=japanwest
+adminuser=adminuser
+az group create -n $region01 -l $region01
+address01="10.1.1.0/24"
+address02="10.1.2.0/24"
+az vm create -n $region01 -g $region01 --image centos -l $region01 --admin-username $adminuser --generate-ssh-keys --vnet-name $region01 --subnet $region01 --subnet-address-prefix $address01 --vnet-address-prefix $address01 --nsg $region01 --nsg-rule ssh --no-wait
+az vm create -n $region02 -g $region01 --image centos -l $region02 --admin-username $adminuser --generate-ssh-keys --vnet-name $region02 --subnet $region02 --subnet-address-prefix $address02 --vnet-address-prefix $address02  --nsg $region02 --nsg-rule ssh
+az vm list -d -g $region01
+az network vnet peering create -g $region01 -n $region01-$region02 --vnet-name $region01 --remote-vnet $region02 --allow-vnet-access
+az network vnet peering create -g $region01 -n $region02-$region01 --vnet-name $region02 --remote-vnet $region01 --allow-vnet-access
+
